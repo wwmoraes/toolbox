@@ -1,0 +1,74 @@
+name: Docker Hub
+
+on: [push,pull_request]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@master
+    - name: lint
+      uses: luke142367/Docker-Lint-Action@v1.0.0
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        TARGET: Dockerfile
+
+  build:
+    runs-on: ubuntu-latest
+    needs: lint
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v1
+
+    - name: Install buildx
+      run: |
+        curl -s https://api.github.com/repos/docker/buildx/releases/latest \
+        | grep "browser_download_url.*buildx-*.*linux-amd64" \
+        | cut -d : -f 2,3 \
+        | tr -d \" \
+        | wget -qi -
+        export DOCKER_CLI_EXPERIMENTAL=enabled
+        mkdir -p ~/.docker/cli-plugins
+        mv buildx* ~/.docker/cli-plugins/docker-buildx
+        chmod a+x ~/.docker/cli-plugins/docker-buildx
+
+    - name: Register Arm executables
+      run: docker run --rm --privileged docker/binfmt:820fdd95a9972a5308930a2bdfb8573dd4447ad3
+
+    - name: Register multiarch qemu executables
+      run: docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+
+    - name: Create buildx instance
+      run: docker buildx create --name actions_builder --use
+
+    - name: Login to Docker Hub
+      run: docker login --username ${{secrets.DOCKER_USERNAME}} -p ${{secrets.DOCKER_PASSWORD}}
+
+    - name: Build & push images
+      run: |
+        export TAG=$(if [ "${{github.ref}}" == "refs/heads/master" ]; then echo "latest"; else echo "${{github.sha}}"; fi)
+        export DOCKER_CLI_EXPERIMENTAL=enabled
+        docker buildx build \
+          --platform linux/amd64,linux/arm64,linux/386,linux/arm/v7,linux/arm/v6 \
+          --tag ${{github.repository}}:$TAG \
+          --push \
+          -f Dockerfile .
+
+  publish-readme:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Checkout
+        uses: actions/checkout@master
+      - name: publish readme
+        run: |
+          REPO=${{ github.repository }}
+          docker run --rm \
+          -v ${{github.workspace}}/README.md:/data/README.md \
+          -e DOCKERHUB_USERNAME=${{secrets.DOCKER_USERNAME}} \
+          -e DOCKERHUB_PASSWORD=${{secrets.DOCKER_REAL_PASSWORD}} \
+          -e DOCKERHUB_REPO_PREFIX=${REPO%%/*} \
+          -e DOCKERHUB_REPO_NAME=${REPO##*/} \
+          sheogorath/readme-to-dockerhub
