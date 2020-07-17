@@ -1,4 +1,4 @@
-FROM alpine:latest
+FROM alpine:edge
 
 ### Install dependencies
 RUN apk --no-cache add \
