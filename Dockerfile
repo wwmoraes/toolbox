@@ -14,7 +14,9 @@ RUN apk add --no-cache --update \
   busybox-extras \
   curl \
   bind-tools \
+  net-tools \
   python3 \
+  tcpdump \
   fish \
   ; rm -rf /var/cache/apk/ /var/lib/apk/ /etc/apk/cache/
 
