@@ -15,7 +15,12 @@ RUN apk add --no-cache --update \
   curl \
   bind-tools \
   python3 \
+  fish \
   ; rm -rf /var/cache/apk/ /var/lib/apk/ /etc/apk/cache/
 
+### set fish as the shell
+ENV SHELL=/usr/bin/fish
+SHELL [ "fish", "-c" ]
+
 ### RUN!
-ENTRYPOINT [ "/bin/ash" ]
+CMD [ "fish" ]
