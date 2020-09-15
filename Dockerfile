@@ -17,6 +17,7 @@ RUN apk add --no-cache --update \
   net-tools \
   python3 \
   tcpdump \
+  libcap \
   gnupg \
   fish \
   ; rm -rf /var/cache/apk/ /var/lib/apk/ /etc/apk/cache/
