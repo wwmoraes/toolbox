@@ -20,7 +20,22 @@ RUN apk add --no-cache --update \
   libcap \
   gnupg \
   fish \
-  ; rm -rf /var/cache/apk/ /var/lib/apk/ /etc/apk/cache/
+  wget \
+  vim \
+  jq \
+  less \
+  coreutils \
+  sed \
+  grep \
+  # procps \
+  # lsof \
+  # htop \
+  # psmisc \
+  # rsync \
+  # unzip \
+  # zip \
+  # which \
+  && rm -rf /var/cache/apk
 
 ### set fish as the shell
 ENV SHELL=/usr/bin/fish
